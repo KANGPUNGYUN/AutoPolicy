@@ -1,73 +1,107 @@
-# React + TypeScript + Vite
+## AutoPolicy 개요
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AutoPolicy는 회사 정보와 서비스 옵션을 입력하면 **이용약관**과 **개인정보 처리방침**을 생성하고,  
+어드민 페이지에서 **법령 기반 텍스트 블록**과 **회사별 약관/정책 사례**를 관리할 수 있는 웹 서비스입니다.
 
-Currently, two official plugins are available:
+배포 주소(예시): `https://kangpungyun.github.io/AutoPolicy/`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 화면 구조
 
-## React Compiler
+- `/generator` (기본 진입): 약관/정책 생성기
+- `/admin`: 법령 텍스트 및 회사별 약관/정책 사례 관리 어드민
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+GitHub Pages에서 새로고침 문제를 피하기 위해 **HashRouter**를 사용하므로,  
+실제 URL은 `#/generator`, `#/admin` 을 포함한 형태로 동작합니다.
 
-## Expanding the ESLint configuration
+## 생성기 사용법
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. 상단 네비게이션에서 **생성기**를 선택합니다.
+2. 좌측 폼에서 다음 정보를 채웁니다.
+   - 회사 기본 정보(회사명, 서비스명, 대표자, 사업자등록번호, 주소, 연락처, 이메일 등)
+   - 사업 유형(B2B/B2C 등) 및 플랫폼 유형(웹/앱/웹+앱)
+   - 회원/비회원 서비스 범위 및 결제 방식
+   - 수집하는 개인정보 항목, 제3자 제공/위탁/국외 이전, 보유기간, 문서 언어(KO/EN)
+3. 우측 상단에서 **이용약관/개인정보 처리방침**, **KO/EN** 탭을 전환하며 생성된 텍스트를 확인합니다.
+4. **전체 복사** 버튼으로 현재 선택된 문서를 클립보드에 복사할 수 있습니다.
+5. 하단의 **참고 회사 사례** 드롭다운에서 어드민에서 저장한 회사 프로파일을 선택하면,
+   해당 회사의 이용약관/개인정보 처리방침 텍스트를 참고용으로 함께 볼 수 있습니다.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+생성된 문서는 **법률 자문이 아니며**, 실제 서비스에 적용하기 전에 반드시 전문가의 검토가 필요합니다.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 어드민 사용법
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+상단 네비게이션에서 **어드민**을 선택하면 두 영역으로 구성된 관리 화면이 열립니다.
+
+### 1. 법령 텍스트 관리
+
+- 상단 필터/검색을 통해 카테고리(이용약관/개인정보/기타)와 키워드로 텍스트를 찾을 수 있습니다.
+- 테이블에서 각 항목의 **ID, 제목, 카테고리, 언어, 태그**를 확인하고 수정/삭제할 수 있습니다.
+- 우측 폼에서:
+  - ID(선택), 카테고리, 언어, 제목, 태그, 내용을 입력하고 **추가/수정 저장**하면
+  - 브라우저 `localStorage`에 저장됩니다.
+- 템플릿과의 연동:
+  - `id`가 약관/정책 템플릿의 조항 ID와 같을 경우, 해당 조항의 기본 문구 대신
+    어드민에서 입력한 내용을 우선 사용합니다.
+
+### 2. 회사별 약관/정책 사례 관리
+
+- 상단 필터에서 업종(커머스/SaaS/커뮤니티/콘텐츠/기타), 사업 유형(B2B/B2C 등), 유료 여부로 목록을 좁힐 수 있습니다.
+- 테이블에는 각 회사의 **ID, 회사명, 업종, 사업 유형, 유료 여부**가 표시되며, 수정/삭제가 가능합니다.
+- 우측 폼에서:
+  - 회사명, 사업 유형, 업종, 유료 여부
+  - 이용약관/개인정보 처리방침 텍스트(KO/EN)
+  - 메모
+  를 입력하고 **추가/수정 저장**하면 `localStorage`에 저장됩니다.
+- 생성기 화면의 **참고 회사 사례** 영역에서 이 데이터를 선택해 실제 문구 구조를 참고할 수 있습니다.
+
+## 데이터 저장 및 Firebase 연동
+
+- 어드민에서 관리하는 데이터는 **Firebase Firestore** 에 저장됩니다.
+  - 법령 텍스트: `legal_texts` 컬렉션
+  - 회사별 약관/개인정보처리방침 사례: `company_policies` 컬렉션
+- 인증은 **Firebase Auth (이메일/비밀번호)** 를 사용하며, 어드민 계정만 어드민 페이지에 접근할 수 있도록 구성되어 있습니다.
+
+### Firebase 설정
+
+1. Firebase 콘솔에서 프로젝트를 생성하고 **Firestore** 와 **Auth(Email/Password)** 를 활성화합니다.
+2. 웹 앱을 등록하고 제공되는 설정 값을 Vite 환경 변수로 추가합니다:
+
+```bash
+# .env.local 예시
+VITE_FIREBASE_API_KEY=...
+VITE_FIREBASE_AUTH_DOMAIN=...
+VITE_FIREBASE_PROJECT_ID=...
+VITE_FIREBASE_STORAGE_BUCKET=...
+VITE_FIREBASE_MESSAGING_SENDER_ID=...
+VITE_FIREBASE_APP_ID=...
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. 코드에서는 `src/firebase/config.ts` / `src/firebase/app.ts` 를 통해 초기화되며,
+   `src/services/legalTextRepository.ts`, `src/services/companyPolicyRepository.ts` 에서 Firestore를 사용합니다.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 어드민 계정 설정
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Firebase 콘솔의 Authentication에서 이메일/비밀번호 방식으로 어드민 계정을 생성합니다.
+2. 초기 버전에서는 로그인된 사용자를 모두 `admin` 으로 간주하지만,
+   필요 시 Firestore `users` 컬렉션과 Security Rules로 역할 기반 제어를 추가할 수 있습니다.
+
+어드민 로그인 페이지는 `/login` 경로에서 접근할 수 있으며, 로그인 후 `/admin` 으로 이동합니다.  
+로그인하지 않은 사용자가 `/admin` 에 접근하면 자동으로 `/login` 으로 리다이렉트됩니다.
+
+## 개발 및 배포
+
+- 개발 서버 실행:
+
+```bash
+npm install
+npm run dev
 ```
+
+- 프로덕션 빌드:
+
+```bash
+npm run build
+```
+
+- GitHub Actions가 `main` 브랜치에 푸시될 때마다 자동으로 `dist`를 `gh-pages` 브랜치에 배포하며,
+  저장소의 Pages 설정에서 `gh-pages` 브랜치를 소스로 사용합니다.

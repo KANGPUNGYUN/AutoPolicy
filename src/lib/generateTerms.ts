@@ -7,6 +7,7 @@ export type TermsGenerationOptions = {
   businessType: 'B2B' | 'B2C' | 'B2B_B2C' | 'OTHER'
   hasPaidService: boolean
   context: Record<string, string>
+  legalTextById?: Record<string, string>
 }
 
 function matchesConditions(clause: TermsClause, options: TermsGenerationOptions): boolean {
@@ -31,7 +32,7 @@ export function generateTerms(options: TermsGenerationOptions): {
   ko?: string
   en?: string
 } {
-  const { languageKo, languageEn, context } = options
+  const { languageKo, languageEn, context, legalTextById } = options
 
   const sorted = [...termsClauses].sort((a, b) => a.order - b.order)
 
@@ -41,7 +42,8 @@ export function generateTerms(options: TermsGenerationOptions): {
   for (const clause of sorted) {
     if (!matchesConditions(clause, options)) continue
 
-    const text = `${clause.title}\n\n${applyPlaceholders(clause.body, context)}`
+    const baseBody = legalTextById?.[clause.id] ?? clause.body
+    const text = `${clause.title}\n\n${applyPlaceholders(baseBody, context)}`
 
     if (clause.language === 'ko' && languageKo) {
       koClauses.push(text)

@@ -9,6 +9,7 @@ export type PrivacyGenerationOptions = {
   outsourcing: boolean
   overseasTransfer: boolean
   context: Record<string, string>
+  legalTextById?: Record<string, string>
 }
 
 function matchesPrivacyConditions(
@@ -52,7 +53,7 @@ export function generatePrivacy(options: PrivacyGenerationOptions): {
   ko?: string
   en?: string
 } {
-  const { languageKo, languageEn, context } = options
+  const { languageKo, languageEn, context, legalTextById } = options
 
   const sorted = [...privacyClauses].sort((a, b) => a.order - b.order)
 
@@ -62,7 +63,8 @@ export function generatePrivacy(options: PrivacyGenerationOptions): {
   for (const clause of sorted) {
     if (!matchesPrivacyConditions(clause, options)) continue
 
-    const text = `${clause.title}\n\n${applyPlaceholders(clause.body, context)}`
+    const baseBody = legalTextById?.[clause.id] ?? clause.body
+    const text = `${clause.title}\n\n${applyPlaceholders(baseBody, context)}`
 
     if (clause.language === 'ko' && languageKo) {
       koClauses.push(text)
