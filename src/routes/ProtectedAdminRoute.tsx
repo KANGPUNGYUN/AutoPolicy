@@ -1,8 +1,9 @@
 import { Navigate } from 'react-router-dom'
+import { type ReactNode } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 
 type Props = {
-  children: JSX.Element
+  children: ReactNode
 }
 
 export function ProtectedAdminRoute({ children }: Props) {
@@ -16,6 +17,6 @@ export function ProtectedAdminRoute({ children }: Props) {
     return <Navigate to="/login" replace />
   }
 
-  return children
+  return <>{children}</>
 }
 

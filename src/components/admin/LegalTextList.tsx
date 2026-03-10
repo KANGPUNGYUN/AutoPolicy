@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  LegalText,
-  LegalTextCategory,
   LegalTextRepository,
+  type LegalText,
+  type LegalTextCategory,
 } from '../../services/legalTextRepository'
 
 type Draft = Omit<LegalText, 'id'> & { id?: string }

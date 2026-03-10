@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import {
-  CompanyBusinessType,
-  CompanyPolicy,
   CompanyPolicyRepository,
-  CompanyServiceType,
+  type CompanyBusinessType,
+  type CompanyPolicy,
+  type CompanyServiceType,
 } from '../../services/companyPolicyRepository'
 
 type Draft = Omit<CompanyPolicy, 'id'> & { id?: string }
