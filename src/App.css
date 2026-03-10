@@ -303,6 +303,22 @@ select:focus {
   color: #9ca3af;
 }
 
+.legal-select {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.legal-select select {
+  min-height: 80px;
+  border-radius: 0.45rem;
+  border: 1px solid #d1d5db;
+  background-color: #f9fafb;
+  padding: 0.35rem 0.4rem;
+  font-size: 0.8rem;
+}
+
 .section-description {
   margin-top: 0.25rem;
   font-size: 0.8rem;

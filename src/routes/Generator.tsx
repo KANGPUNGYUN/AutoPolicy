@@ -1,7 +1,8 @@
 import '../App.css'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ChangeEvent } from 'react'
 import { generateTerms } from '../lib/generateTerms'
 import { generatePrivacy } from '../lib/generatePrivacy'
+import { applyPlaceholders } from '../lib/placeholder'
 import { LegalTextRepository, type LegalText } from '../services/legalTextRepository'
 import {
   CompanyPolicyRepository,
@@ -61,6 +62,8 @@ type ConfigState = {
   languages: LanguageOptions
 }
 
+type SourceMode = 'template' | 'company'
+
 const defaultConfig: ConfigState = {
   company: {
     companyName: '',
@@ -109,6 +112,8 @@ export function GeneratorPage() {
   const [legalTexts, setLegalTexts] = useState<LegalText[]>([])
   const [companyPolicies, setCompanyPolicies] = useState<CompanyPolicy[]>([])
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('')
+  const [sourceMode, setSourceMode] = useState<SourceMode>('template')
+  const [selectedLegalIds, setSelectedLegalIds] = useState<string[]>([])
 
   useEffect(() => {
     void LegalTextRepository.getAll().then(setLegalTexts)
@@ -128,6 +133,31 @@ export function GeneratorPage() {
     () => companyPolicies.find((c) => c.id === selectedCompanyId),
     [companyPolicies, selectedCompanyId],
   )
+
+  const context = useMemo(
+    () => ({
+      companyName: config.company.companyName || '회사명',
+      serviceName: config.company.serviceName || '서비스명',
+    }),
+    [config.company.companyName, config.company.serviceName],
+  )
+
+  const legalOptionsForSelection = useMemo(
+    () =>
+      legalTexts.filter((t) => {
+        if (t.language !== selectedLang) return false
+        if (selectedDoc === 'terms') {
+          return t.category === 'TERMS_LAW' || t.category === 'OTHER'
+        }
+        return t.category === 'PRIVACY_LAW' || t.category === 'OTHER'
+      }),
+    [legalTexts, selectedDoc, selectedLang],
+  )
+
+  const handleLegalSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const values = Array.from(e.target.selectedOptions).map((o) => o.value)
+    setSelectedLegalIds(values)
+  }
 
   const updateCompany = (patch: Partial<CompanyInfo>) => {
     setConfig((prev) => ({ ...prev, company: { ...prev.company, ...patch } }))
@@ -167,10 +197,7 @@ export function GeneratorPage() {
     businessType: config.businessType,
     hasPaidService: config.payment.hasPaidService,
     legalTextById: legalTextMap,
-    context: {
-      companyName: config.company.companyName || '회사명',
-      serviceName: config.company.serviceName || '서비스명',
-    },
+    context,
   })
 
   const privacy = generatePrivacy({
@@ -181,13 +208,10 @@ export function GeneratorPage() {
     outsourcing: config.privacy.outsourcing,
     overseasTransfer: config.privacy.overseasTransfer,
     legalTextById: legalTextMap,
-    context: {
-      companyName: config.company.companyName || '회사명',
-      serviceName: config.company.serviceName || '서비스명',
-    },
+    context,
   })
 
-  const currentText =
+  const templateText =
     selectedDoc === 'terms'
       ? selectedLang === 'ko'
         ? terms.ko
@@ -195,6 +219,35 @@ export function GeneratorPage() {
       : selectedLang === 'ko'
         ? privacy.ko
         : privacy.en
+
+  let baseText = templateText ?? ''
+
+  if (sourceMode === 'company' && selectedCompany) {
+    if (selectedDoc === 'terms') {
+      const raw =
+        selectedLang === 'ko'
+          ? selectedCompany.termsTextKo
+          : selectedCompany.termsTextEn ?? selectedCompany.termsTextKo
+      if (raw) {
+        baseText = applyPlaceholders(raw, context)
+      }
+    } else {
+      const raw =
+        selectedLang === 'ko'
+          ? selectedCompany.privacyTextKo
+          : selectedCompany.privacyTextEn ?? selectedCompany.privacyTextKo
+      if (raw) {
+        baseText = applyPlaceholders(raw, context)
+      }
+    }
+  }
+
+  const extraLegalText = legalOptionsForSelection
+    .filter((t) => selectedLegalIds.includes(t.id))
+    .map((t) => `${t.title}\n\n${applyPlaceholders(t.content, context)}`)
+    .join('\n\n')
+
+  const currentText = [baseText, extraLegalText].filter(Boolean).join('\n\n')
 
   const handleCopy = async () => {
     if (!currentText) return
@@ -532,6 +585,31 @@ export function GeneratorPage() {
             <span>영어</span>
           </label>
         </fieldset>
+
+        <fieldset className="fieldset">
+          <legend>생성 기준</legend>
+          <label className="checkbox-row">
+            <input
+              type="radio"
+              name="sourceMode"
+              value="template"
+              checked={sourceMode === 'template'}
+              onChange={() => setSourceMode('template')}
+            />
+            <span>템플릿/옵션 기반 생성</span>
+          </label>
+          <label className="checkbox-row">
+            <input
+              type="radio"
+              name="sourceMode"
+              value="company"
+              checked={sourceMode === 'company'}
+              onChange={() => setSourceMode('company')}
+              disabled={!selectedCompany}
+            />
+            <span>선택한 회사 사례를 기본으로 생성</span>
+          </label>
+        </fieldset>
       </section>
 
       <section className="preview-column">
@@ -590,6 +668,21 @@ export function GeneratorPage() {
               선택한 언어/문서에 해당하는 내용이 없습니다. 옵션을 조정해 보세요.
             </div>
           )}
+        </div>
+
+        <div className="legal-select">
+          <span className="reference-title">추가 법령 조항 선택</span>
+          <select
+            multiple
+            value={selectedLegalIds}
+            onChange={handleLegalSelectChange}
+          >
+            {legalOptionsForSelection.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.title}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="reference-panel">
