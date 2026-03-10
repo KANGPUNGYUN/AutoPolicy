@@ -1,7 +1,11 @@
 import '../App.css'
 import { type FormEvent, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from 'firebase/auth'
 import { auth } from '../firebase/app'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -28,6 +32,21 @@ export function LoginPage() {
     } catch (err) {
       console.error(err)
       setError('로그인에 실패했습니다. 이메일/비밀번호를 확인하세요.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setSubmitting(true)
+    setError(null)
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+      navigate('/admin', { replace: true })
+    } catch (err) {
+      console.error(err)
+      setError('구글 로그인에 실패했습니다.')
     } finally {
       setSubmitting(false)
     }
@@ -62,6 +81,13 @@ export function LoginPage() {
           {error && <div className="error-text">{error}</div>}
           <button type="submit" disabled={submitting}>
             {submitting ? '로그인 중...' : '로그인'}
+          </button>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => void handleGoogleLogin()}
+          >
+            Google 계정으로 로그인
           </button>
         </form>
       </section>
